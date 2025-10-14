@@ -216,15 +216,15 @@
             50% { transform: translateY(-15px); }
         }
 
-        /* Mountain Character (Hiker) */
-        .character-mountain-twilight {
+        /* Stage Character */
+        .character-stage {
             width: 60px;
             height: 90px;
-            background-color: #a16207;
+            background-color: #111827; /* Dark Suit */
             border-radius: 30px 30px 10px 10px;
-            border: 3px solid #78350f;
+            border: 3px solid #000;
         }
-        .character-mountain-twilight::before {
+        .character-stage::before {
             content: '';
             position: absolute;
             top: -25px;
@@ -235,19 +235,7 @@
             border-radius: 50%;
             border: 3px solid #333;
         }
-        .character-mountain-twilight::after {
-            content: '';
-            position: absolute;
-            top: 20px;
-            left: 50%; /* Center of character body */
-            transform: translateX(-50%);
-            width: 70px;
-            height: 60px;
-            background: #78350f;
-            border-radius: 10px;
-            border: 3px solid #451a03;
-            z-index: -1;
-        }
+        /* No ::after for this one, simpler look */
         /* --- END CHARACTER STYLES --- */
 
         .info-sign {
@@ -377,7 +365,7 @@
         }
         .constellation-title {
             position: absolute;
-            top: -20px; 
+            top: -30px; 
             left: 50%;
             transform: translateX(-50%);
             color: white;
@@ -418,35 +406,27 @@
             stroke-dasharray: 6 4;
         }
 
-        .info-flag {
+        .info-spotlight {
             position: absolute;
-            bottom: 330px; /* Base height of the mountain peak */
-            background: #dc2626; /* Red background */
-            color: white;
-            padding: 20px;
-            border-radius: 5px;
-            border: 3px solid #b91c1c; /* Darker red border */
+            bottom: 80px;
+            width: 400px;
+            height: 250px;
+            background: radial-gradient(ellipse at top, rgba(255, 255, 220, 0.8) 0%, transparent 70%);
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
             text-align: center;
+            padding: 40px;
+            color: white;
             opacity: 0;
             visibility: hidden;
-            transform-origin: bottom left; /* So it appears to be on the pole */
-            transform: scale(0.9) translateY(20px);
             transition: all 0.4s ease-out;
             z-index: 10;
         }
-        .info-flag::after { /* Flagpole */
-            content: '';
-            position: absolute;
-            bottom: -250px; /* Pole length to reach the ground of the mountain */
-            left: -8px;
-            width: 8px;
-            height: 250px;
-            background: #343a40;
-            border-radius: 5px 5px 0 0;
-        }
-        .info-flag h2 {
-            color: #e9ecef;
-            text-shadow: 1px 1px 2px #343a40;
+        .info-spotlight h2 {
+            text-shadow: 1px 1px 3px #000;
         }
 
         .game-over-screen {
@@ -467,7 +447,7 @@
             z-index: 200; /* Ensure it's on top */
         }
 
-        .info-cloud.visible, .info-grass-patch.visible, .info-water-bubble.visible, .info-lava-comet.visible, .constellation-container.visible, .info-flag.visible, .game-over-screen.visible {
+        .info-cloud.visible, .info-grass-patch.visible, .info-water-bubble.visible, .info-lava-comet.visible, .constellation-container.visible, .info-spotlight.visible, .game-over-screen.visible {
             opacity: 1;
             visibility: visible;
             transform: scale(1) translateY(0);
@@ -557,14 +537,11 @@
         .scene[data-theme="space"] .info-cloud { background-color: #e2e8f0; }
         .scene[data-theme="space"] .shooting-star { display: block; }
 
-        /* Mountain Summit Theme (Section 5) */
-        .scene[data-theme="mountain-twilight"] { background: linear-gradient(to top, #4a4e69, #3a3f58, #2b2f42, #1d1e2c); }
-        .scene[data-theme="mountain-twilight"] .ground { background-color: #adb5bd; border-top: 5px solid #6c757d; }
-        .scene[data-theme="mountain-twilight"] .cloud, 
-        .scene[data-theme="mountain-twilight"] .asteroid { display: none; }
-        .scene[data-theme="mountain-twilight"] .star { display: block; } /* Re-use stars for twilight */
-        .scene[data-theme="mountain-twilight"] .mountain-peak { display: block; }
-        .scene[data-theme="mountain-twilight"] .snow-particle { display: block; }
+        /* Stage Theme (Section 5) */
+        .scene[data-theme="stage"] { background-color: #111827; }
+        .scene[data-theme="stage"] .ground { background: #6b4631; border-top: 5px solid #4a2f22; }
+        .scene[data-theme="stage"] .stage-light { display: block; }
+        
 
         /* Game Over Theme (End) */
         .scene[data-theme="game-over"] { background-color: #000; }
@@ -617,26 +594,16 @@
             0% { transform: translateX(0) rotate(0deg); }
             100% { transform: translateX(-100px) rotate(360deg); }
         }
-        .mountain-peak {
+        
+        .stage-light {
             position: absolute;
-            bottom: 80px;
-            width: 0;
-            height: 0;
-            border-left: 200px solid transparent;
-            border-right: 200px solid transparent;
-            border-bottom: 250px solid #6c757d;
+            top: 0;
+            width: 100px;
+            height: 100%;
+            background: linear-gradient(to bottom, rgba(255, 255, 200, 0.2), transparent 60%);
+            transform-origin: top center;
         }
-        .mountain-peak::before { /* Snow cap */
-            content: '';
-            position: absolute;
-            top: 50px;
-            left: -50px;
-            width: 0;
-            height: 0;
-            border-left: 50px solid transparent;
-            border-right: 50px solid transparent;
-            border-bottom: 70px solid #f8f9fa;
-        }
+        
         /* --- NEW ANIMATED COMPONENTS --- */
         .bird-flock {
             width: 50px; height: 3px; background-color: #333; top: 20%;
@@ -833,18 +800,19 @@
                  <div class="info-star" style="left: 1040px; top: 450px; width: 120px; height: 120px; animation-delay: -1.2s;">Stakeholder Mgt.</div>
             </div>
             
-            <!-- Mountain Summit Content -->
-            <div class="info-flag" style="left: 6150px; width: 300px;" data-trigger-x="6150">
-                <h2 class="text-2xl font-bold mb-2">Certifications</h2>
-                 <ul class="list-disc pl-5 space-y-1 text-md">
+            <!-- Stage Content -->
+            <div class="info-spotlight" style="left: 6150px;" data-trigger-x="6150">
+                <h2 class="text-3xl font-bold mb-2">Certifications</h2>
+                 <ul class="list-disc pl-5 space-y-2 text-lg">
                      <li>Certified Scrum Product Owner</li>
                      <li>Intro to Classical Music (Yale)</li>
                  </ul>
             </div>
-            <div class="info-flag" style="left: 6850px; width: 350px;" data-trigger-x="6850">
-                 <h2 class="text-2xl font-bold mb-2">Personal Interests</h2>
-                 <p class="text-lg">Passionate about high-altitude trekking and theatre arts, which teach discipline, teamwork, and creative problem-solving.</p>
+             <div class="info-spotlight" style="left: 6850px;" data-trigger-x="6850">
+                 <h2 class="text-3xl font-bold mb-2">Personal Interests</h2>
+                 <p class="text-xl">Passionate about high-altitude trekking and theatre arts, which teach discipline, teamwork, and creative problem-solving.</p>
             </div>
+
 
             <!-- Environmental Theming Elements -->
             <div id="theme-elements">
@@ -877,17 +845,11 @@
                 <div class="environment-element asteroid" style="left: 4600px; top: 60%; width: 50px; height: 40px;"></div>
                 <div class="environment-element asteroid" style="left: 5200px; top: 20%; width: 80px; height: 60px; animation-duration: 30s;"></div>
 
-                <!-- Mountain Summit -->
-                <div class="environment-element mountain-peak" style="left: 6100px;"></div>
-                <div class="environment-element mountain-peak" style="left: 6800px; transform: scaleX(-1) scale(0.7); bottom: 80px;"></div>
-                <div class="environment-element star" style="left: 5300px; top: 35%; width: 6px; height: 6px;"></div>
-                <div class="environment-element star" style="left: 6000px; top: 20%; width: 5px; height: 5px;"></div>
-                <div class="environment-element snow-particle" style="left: 5400px;"></div>
-                <div class="environment-element snow-particle" style="left: 5600px; animation-delay: -5s; transform: scale(0.8);"></div>
-                <div class="environment-element snow-particle" style="left: 5800px; animation-delay: -2s;"></div>
-                <div class="environment-element snow-particle" style="left: 6000px; animation-delay: -8s; transform: scale(1.2);"></div>
-                <div class="environment-element snow-particle" style="left: 6200px; animation-delay: -4s;"></div>
-                <div class="environment-element snow-particle" style="left: 6400px; animation-delay: -6s; transform: scale(0.9);"></div>
+                <!-- Stage -->
+                <div class="environment-element stage-light" style="left: 6000px; transform: rotate(20deg);"></div>
+                <div class="environment-element stage-light" style="left: 6500px; transform: rotate(-15deg) scaleY(1.2);"></div>
+                <div class="environment-element stage-light" style="left: 7000px; transform: rotate(10deg);"></div>
+
             </div>
         </div>
 
@@ -910,7 +872,7 @@
         const character = document.querySelector('.character');
         const world = document.querySelector('.world');
         const scene = document.querySelector('.scene');
-        const infoElements = document.querySelectorAll('.info-cloud, .info-grass-patch, .info-water-bubble, .info-lava-comet, .constellation-container, .info-flag, .game-over-screen');
+        const infoElements = document.querySelectorAll('.info-cloud, .info-grass-patch, .info-water-bubble, .info-lava-comet, .constellation-container, .info-spotlight, .game-over-screen');
         const headerInfo = document.querySelector('.header-info');
         const blinkingArrow = document.getElementById('blinkingArrow');
         
@@ -1004,9 +966,9 @@
             else if (characterWorldX >= 4200 && characterWorldX < 5800){ 
                 currentTheme = 'space';
             }
-            // Section 5: Certs/Interests (Mountain)
+            // Section 5: Certs/Interests (Stage)
             else if (characterWorldX >= 5800 && characterWorldX < 7550) { 
-                currentTheme = 'mountain-twilight';
+                currentTheme = 'stage';
             }
             // Section 6: Game Over
             else if (characterWorldX >= 7550) { 
@@ -1015,7 +977,7 @@
             }
             
             // --- CHARACTER STYLE LOGIC ---
-            const characterThemes = ['character-sky', 'character-underwater', 'character-lava', 'character-space', 'character-mountain-twilight'];
+            const characterThemes = ['character-sky', 'character-underwater', 'character-lava', 'character-space', 'character-stage'];
             const newCharacterClass = `character-${currentTheme}`;
             let needsUpdate = true;
             for(const themeClass of characterThemes) {
