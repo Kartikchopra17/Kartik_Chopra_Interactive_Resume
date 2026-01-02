@@ -3,984 +3,633 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kartik Chopra | Interactive Resume</title>
+    <title>Kartik Chopra | Product Manager Portfolio</title>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --sky-top: #4FC3F7;
+            --sky-bottom: #B3E5FC;
+            --ocean-top: #0288D1;
+            --ocean-bottom: #01579B;
+            --space-bg: #0f172a;
+            --ground-color: #66BB6A;
+        }
+
         body {
-            font-family: 'VT323', monospace;
-            color: #333;
-            overflow: hidden; /* Prevent scrollbars */
+            margin: 0;
+            padding: 0;
+            /* Adjusted height for tighter layout */
+            height: 16000px; 
+            background: #111;
+            font-family: 'Nunito', sans-serif;
+            overflow-x: hidden;
         }
-        .scene {
-            width: 100vw;
-            height: 100vh;
-            position: relative;
+
+        /* --- UI OVERLAYS --- */
+        .hud {
+            position: fixed; top: 20px; left: 20px; z-index: 1000;
+            background: rgba(255,255,255,0.9); padding: 10px 20px;
+            border-radius: 50px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            display: flex; gap: 15px; align-items: center;
+        }
+        .hud a { color: #333; font-weight: 800; text-decoration: none; font-size: 0.9rem; }
+        .hud a:hover { color: #0288D1; }
+
+        .start-screen-message {
+            position: fixed; 
+            top: 15%; 
+            left: 50%; 
+            transform: translate(-50%, -50%);
+            text-align: center; 
+            z-index: 2000; 
+            pointer-events: none;
+            transition: opacity 0.5s;
+        }
+        .start-screen-message h1 { font-size: 2rem; color: #333; font-weight: 900; background: rgba(255,255,255,0.8); padding: 10px 20px; border-radius: 10px; }
+        .blink-text { animation: blink 1.5s infinite; color: #0277BD; font-weight: 800; margin-top: 10px; display: block; font-size: 1.2rem; }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+        /* --- VIEWPORT & LAYERS --- */
+        .viewport {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100vh;
             overflow: hidden;
-        }
-        .world {
-            position: absolute;
-            height: 100%;
-            top: 0;
-            left: 0;
-            z-index: 1; 
-        }
-        .ground {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 8500px; /* Make the world wide */
-            height: 80px;
-        }
-        /* --- DYNAMIC CHARACTER STYLES --- */
-        .character {
-            position: absolute;
-            bottom: 80px;
-            left: 100px;
-            transition: all 0.2s;
-            z-index: 2;
-        }
-        .character.running {
-            animation: run-animation 0.4s infinite;
-        }
-        @keyframes run-animation {
-            0% { transform: translateY(0); }
-            50% { transform: translateY(-5px); }
-            100% { transform: translateY(0); }
+            background: linear-gradient(to bottom, var(--sky-top), var(--sky-bottom));
+            transition: background 1s ease;
         }
 
-        /* Sky Character (Default) */
-        .character-sky {
-            width: 60px;
-            height: 90px;
-            background-color: #6b7280;
-            border-radius: 30px 30px 10px 10px;
-            border: 3px solid #333;
-        }
-        .character-sky::before {
-            content: '';
-            position: absolute;
-            top: -25px;
-            left: 5px;
-            width: 44px;
-            height: 44px;
-            background: #F5A623;
-            border-radius: 50%;
-            border: 3px solid #333;
-        }
-        .character-sky::after {
-            content: '';
-            position: absolute;
-            top: -10px;
-            left: 3px;
-            width: 48px;
-            height: 5px;
-            background: #333;
-            border-radius: 0;
-            border: none;
-            z-index: 0;
+        .layer {
+            position: absolute; top: 0; left: 0; height: 100%;
+            will-change: transform;
         }
 
-        /* Underwater Character */
-        .character-underwater {
-            width: 90px;
-            height: 40px;
-            background-color: #6b7280;
-            border-radius: 20px;
-            border: 3px solid #333;
-            bottom: 120px; /* Lowered floating position */
-        }
-        .character-underwater.running {
-            animation: swim-body 1.5s infinite ease-in-out;
-        }
-        .character-underwater::before {
-            content: '';
-            position: absolute;
-            top: -5px;
-            left: -25px;
-            width: 44px;
-            height: 44px;
-            background: #F5A623;
-            border-radius: 50%;
-            border: 3px solid #333;
-        }
-        .character-underwater::after {
-            content: '';
-            position: absolute;
-            top: 10px;
-            right: -25px;
-            width: 0;
-            height: 0;
-            background: transparent;
-            border-left: 30px solid #333;
-            border-top: 10px solid transparent;
-            border-bottom: 10px solid transparent;
-            border-radius: 0;
-            animation: kick-flippers 0.6s infinite ease-in-out;
-            z-index: 0;
-        }
-        @keyframes swim-body {
-            0%, 100% { transform: translateY(0) rotate(-2deg); }
-            50% { transform: translateY(5px) rotate(2deg); }
-        }
-        @keyframes kick-flippers {
-            0%, 100% { transform: rotate(15deg); }
-            50% { transform: rotate(-15deg); }
+        .layer-clouds { width: 100%; z-index: 1; opacity: 0.8; }
+        .layer-mid { width: 100%; z-index: 2; }
+        .layer-world { display: flex; align-items: flex-end; height: 100%; z-index: 10; }
+
+        /* --- GAME OBJECTS --- */
+        
+        /* 1. Ground */
+        .ground-strip {
+            position: absolute; bottom: 0; left: 0; height: 120px; width: 25000px;
+            background: var(--ground-color);
+            border-top: 15px solid #43A047;
+            transition: background 1s ease, border-color 1s ease;
         }
 
-        /* Lava Character (Rocket) */
-        .character-lava {
-            width: 70px;
-            height: 120px;
-            background: linear-gradient(to top, #9ca3af, #e5e7eb);
-            border-radius: 35px 35px 10px 10px;
-            border: 4px solid #4b5563;
-            bottom: 110px; /* Hovering */
-        }
-        .character-lava.running {
-             animation: rocket-hover 1s infinite ease-in-out;
-        }
-        .character-lava::before {
-            content: '';
-            position: absolute;
-            top: -40px;
-            left: 0px;
-            width: 0;
-            height: 0;
-            background: transparent;
-            border-left: 35px solid transparent;
-            border-right: 35px solid transparent;
-            border-bottom: 40px solid #ef4444;
-            border-radius: 0;
-        }
-        .character-lava::after {
-            content: '';
-            position: absolute;
-            bottom: -40px;
-            left: 20px;
-            width: 30px;
-            height: 40px;
-            background: #f59e0b;
-            border-radius: 0 0 15px 15px;
-            border: none;
-            animation: rocket-flame 0.15s infinite linear;
-            z-index: 0;
-        }
-        @keyframes rocket-hover {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-8px); }
-        }
-        @keyframes rocket-flame {
-            0%, 100% { transform: scaleY(1) scaleX(1); }
-            50% { transform: scaleY(1.2) scaleX(0.8); }
-        }
-
-        /* Space Character (Astronaut) */
-        .character-space {
-            width: 70px;
-            height: 90px;
-            background-color: #e2e8f0;
-            border-radius: 35px 35px 10px 10px;
-            border: 4px solid #94a3b8;
-            bottom: 120px; /* Lowered floating position */
-        }
-        .character-space.running {
-            animation: float-space 4s infinite ease-in-out;
-        }
-        .character-space::before {
-            content: '';
-            position: absolute;
-            top: -40px;
-            left: -5px;
-            width: 74px;
-            height: 74px;
-            background: #f8fafc;
-            border-radius: 50%;
-            border: 4px solid #94a3b8;
-        }
-        .character-space::after {
-            content: '';
-            position: absolute;
-            top: -30px;
-            left: 5px;
-            width: 54px;
-            height: 45px;
-            background: #1e293b;
-            border-radius: 50%;
-            border: none;
-            z-index: 0;
-        }
-        @keyframes float-space {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-15px); }
-        }
-
-        /* Stage Character */
-        .character-stage {
-            width: 60px;
-            height: 90px;
-            background-color: #111827; /* Dark Suit */
-            border-radius: 30px 30px 10px 10px;
+        /* 2. Text Boxes & Containers */
+        .game-card {
+            position: absolute; bottom: 220px; /* Vertically aligned */
+            background: white; padding: 25px; border-radius: 12px;
+            width: 380px; box-shadow: 8px 8px 0 rgba(0,0,0,0.8);
             border: 3px solid #000;
         }
-        .character-stage::before {
-            content: '';
-            position: absolute;
-            top: -25px;
-            left: 5px;
-            width: 44px;
-            height: 44px;
-            background: #F5A623;
-            border-radius: 50%;
-            border: 3px solid #333;
-        }
-        /* No ::after for this one, simpler look */
-        /* --- END CHARACTER STYLES --- */
+        .game-card h2 { font-weight: 900; font-size: 1.4rem; color: #333; line-height: 1.2; }
+        .game-card h3 { font-weight: 700; color: #0288D1; margin-top: 5px; margin-bottom: 8px; font-size: 1.1rem; }
+        .game-card p, .game-card li { color: #444; font-size: 0.9rem; line-height: 1.5; font-weight: 600; }
+        .game-card ul { list-style-type: square; padding-left: 20px; margin-top: 8px; }
+        .game-card .meta { font-size: 0.8rem; color: #666; font-style: italic; margin-bottom: 5px; display: block; }
 
-        .info-sign {
-            position: absolute;
-            bottom: 80px;
-            width: 350px;
-            background: #D2B48C;
-            border: 5px solid #8B4513;
-            border-radius: 10px;
-            padding: 20px;
-            text-align: center;
+        /* 3. Hero Character */
+        .hero {
+            position: absolute; bottom: 110px; left: 20%;
+            width: 80px; height: 100px; z-index: 100;
+            /* Smooth transition for state changes (swim/fly) */
+            transition: transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            transform-origin: center center;
         }
-        .info-sign::after { /* Post */
-            content: '';
-            position: absolute;
-            bottom: -80px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 20px;
-            height: 80px;
-            background: #8B4513;
+        .hero svg { width: 100%; height: 100%; overflow: visible; }
+        
+        /* Animation Classes */
+        .hero.run .leg-l { animation: runL 0.2s infinite alternate ease-in-out; transform-origin: top; }
+        .hero.run .leg-r { animation: runR 0.2s infinite alternate ease-in-out; transform-origin: top; }
+        .hero.run .hero-body { animation: bounceBody 0.2s infinite alternate; }
+        
+        /* SWIM STATE: Rotate 90deg, move up */
+        .hero.swim { 
+            transform: translateY(-80px) rotate(90deg) !important; 
+        }
+        .hero.swim .leg-l, .hero.swim .leg-r {
+            /* Kicking animation */
+            animation: kick 0.4s infinite alternate;
         }
         
-        /* Updated: Centralized About Me Patch */
-        .info-grass-patch {
-            position: absolute;
-            /* Changed from bottom: 80px to top: 35vh */
-            top: 35vh; 
-            background: #2E8B57;
-            color: white;
-            padding: 30px 40px;
-            /* Full rounded borders for floating look */
-            border-radius: 15px; 
-            border: 5px solid #006400;
-            opacity: 0;
-            visibility: hidden;
-            transform: scale(0.9) translateY(20px);
-            transition: all 0.4s ease-out;
-            z-index: 10;
-        }
-        .info-grass-patch h2 {
-            color: #F0FFF0;
+        /* FLY STATE: Rotate -20deg, move higher */
+        .hero.fly { 
+            transform: translateY(-200px) rotate(20deg) !important; 
         }
 
-        /* Updated: Centralized Bubbles */
-        .info-water-bubble {
-            position: absolute;
-            /* Changed from bottom to top: 30vh */
-            top: 30vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            background: rgba(21, 94, 117, 0.75);
-            color: white;
-            border-radius: 50%;
-            border: 4px solid rgba(255, 255, 255, 0.8);
-            box-shadow: inset 0 0 25px rgba(255, 255, 255, 0.6), 0 0 15px rgba(255,255,255,0.3);
-            opacity: 0;
-            visibility: hidden;
-            transform: translateY(0) translateX(0);
-            transition: opacity 0.4s ease-out, visibility 0.4s ease-out;
-            z-index: 10;
-            padding: 20px;
-            animation: float-bubble 6s infinite ease-in-out;
-        }
-        @keyframes float-bubble {
-            0%, 100% { transform: translateY(0px) translateX(0px); }
-            25% { transform: translateY(-8px) translateX(5px); }
-            50% { transform: translateY(0px) translateX(0px); }
-            75% { transform: translateY(8px) translateX(-5px); }
-        }
+        @keyframes runL { from { transform: rotate(25deg); } to { transform: rotate(-25deg); } }
+        @keyframes runR { from { transform: rotate(-25deg); } to { transform: rotate(25deg); } }
+        @keyframes kick { from { transform: rotate(10deg); } to { transform: rotate(-10deg); } }
+        @keyframes bounceBody { from { transform: translateY(0); } to { transform: translateY(-3px); } }
 
-        /* Updated: Centralized Comets */
-        .info-lava-comet {
-            position: absolute;
-            /* Changed from bottom to top: 30vh */
-            top: 30vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            padding: 30px;
-            color: white;
-            background: radial-gradient(circle, #ff8c00, #ff4500, #8b0000);
-            border-radius: 50%;
-            border: 5px solid #ff4500;
-            box-shadow: 0 0 35px #ff4500, inset 0 0 20px #ff8c00;
-            opacity: 0;
-            visibility: hidden;
-            transform: scale(1);
-            transition: opacity 0.4s ease-out, visibility 0.4s ease-out;
-            z-index: 10;
-            animation: lava-pulse 4s infinite ease-in-out;
+        /* --- GAME OVER SCREEN --- */
+        .game-over-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: black; z-index: 5000;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            opacity: 0; pointer-events: none; transition: opacity 1s;
         }
-         @keyframes lava-pulse {
-            0%, 100% { transform: scale(1); box-shadow: 0 0 35px #ff4500, inset 0 0 20px #ff8c00; }
-            50% { transform: scale(1.03); box-shadow: 0 0 45px #ff6a00, inset 0 0 25px #ff8c00; }
-        }
-
-        /* Updated: Centralized Constellation */
-        .constellation-container {
-            position: absolute;
-            width: 1200px;
-            height: 600px; 
-            /* Changed from bottom: 40px to top: 15vh */
-            top: 15vh;
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 0.8s ease-out, visibility 0.8s ease-out;
-            z-index: 10;
-        }
-        .constellation-title {
-            position: absolute;
-            top: -30px; 
-            left: 50%;
-            transform: translateX(-50%);
-            color: white;
-            font-size: 2.5rem;
-            text-shadow: 0 0 10px white;
-        }
-        .info-star {
-            position: absolute;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            font-size: 1.2rem;
-            font-weight: bold;
-            color: #1e293b;
-            background: radial-gradient(circle, #ffffff, #f1f5f9, #e2e8f0);
-            border-radius: 50%;
-            border: 3px solid #cbd5e1;
-            box-shadow: 0 0 20px #ffffff, inset 0 0 10px #f1f5f9;
-            animation: star-pulse 5s infinite ease-in-out;
-            padding: 10px;
-        }
-        @keyframes star-pulse {
-            0%, 100% { transform: scale(1); box-shadow: 0 0 20px #ffffff, inset 0 0 10px #f1f5f9; }
-            50% { transform: scale(1.05); box-shadow: 0 0 30px #ffffff, inset 0 0 15px #f1f5f9; }
-        }
-        .constellation-svg {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
-        }
-        .constellation-svg line {
-            stroke: rgba(255, 255, 255, 0.4);
-            stroke-width: 2px;
-            stroke-dasharray: 6 4;
-        }
-
-        /* Updated: Centralized Spotlight */
-        .info-spotlight {
-            position: absolute;
-            /* Changed from bottom: 80px to top: 25vh */
-            top: 25vh;
-            width: 400px;
-            height: 250px;
-            background: radial-gradient(ellipse at top, rgba(255, 255, 220, 0.8) 0%, transparent 70%);
-            border-radius: 50%;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            padding: 40px;
-            color: white;
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.4s ease-out;
-            z-index: 10;
-        }
-        .info-spotlight h2 {
-            text-shadow: 1px 1px 3px #000;
-        }
-
-        .game-over-screen {
-            position: absolute;
-            width: 100vw; /* Takes full screen */
-            height: 100vh;
-            top: 0;
-            left: 0;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            color: white;
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 1.5s ease-in-out;
-            z-index: 200; /* Ensure it's on top */
-        }
-
-        .info-cloud.visible, .info-grass-patch.visible, .info-water-bubble.visible, .info-lava-comet.visible, .constellation-container.visible, .info-spotlight.visible, .game-over-screen.visible {
-            opacity: 1;
-            visibility: visible;
-            transform: scale(1) translateY(0);
-        }
-        .header-info {
-            position: fixed;
-            top: 15px;
-            left: 15px;
-            background: rgba(255,255,255,0.8);
-            padding: 10px;
-            border-radius: 8px;
-            border: 2px solid #333;
-            z-index: 100;
-            transition: transform 0.8s cubic-bezier(0.68, -0.55, 0.27, 1.55);
-            will-change: transform; /* Helps prevent animation glitches */
-        }
-        .header-info.moved {
-            /* vh is viewport height. 100% is element height. 30px is top(15) + bottom(15) margins */
-            transform: translateY(calc(100vh - 100% - 30px));
-        }
-        .instructions {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0,0,0,0.6);
-            color: white;
-            padding: 10px 20px;
-            border-radius: 20px;
-            font-size: 1.2rem;
-            z-index: 100;
-        }
-
-        .blinking-arrow {
-            position: fixed;
-            top: 30px;
-            right: 40px;
-            font-size: 4rem;
-            color: rgba(0, 0, 0, 0.7);
-            text-shadow: 0 0 10px white;
-            z-index: 150;
-            animation: blink 1.5s infinite ease-in-out;
-            transition: opacity 0.5s ease-out, visibility 0.5s;
-        }
-        @keyframes blink {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.2; }
-        }
-        .blinking-arrow.fade-out {
-            opacity: 0;
-            visibility: hidden;
-        }
-
-        /* --- THEME STYLES --- */
-        .cloud, .environment-element { position: absolute; }
-
-        /* Default Sky Theme (Section 1) */
-        .scene[data-theme="sky"] { background-color: #87CEEB; }
-        .scene[data-theme="sky"] .ground { background-color: #228B22; border-top: 5px solid #006400; }
-        .scene[data-theme="sky"] .cloud { display: block; }
-        .scene[data-theme="sky"] .bird-flock { display: block; }
-        
-        /* Underwater Theme (Section 2) */
-        .scene[data-theme="underwater"] { background-color: #1E90FF; }
-        .scene[data-theme="underwater"] .ground { background-color: #D2B48C; border-top: 5px solid #8B4513; }
-        .scene[data-theme="underwater"] .cloud { display: none; }
-        .scene[data-theme="underwater"] .bubble { display: block; }
-        .scene[data-theme="underwater"] .fish-school, .scene[data-theme="underwater"] .seaweed { display: block; }
-
-        /* Lava Theme (Section 3) */
-        .scene[data-theme="lava"] { background-color: #2d2d2d; }
-        .scene[data-theme="lava"] .ground { 
-            background-color: #FF4500; 
-            border-top: 5px solid #8B0000;
-            box-shadow: 0 0 25px #FF4500, inset 0 0 10px #8B0000;
-        }
-        .scene[data-theme="lava"] .cloud { display: none; }
-        .scene[data-theme="lava"] .ember { display: block; }
-        .scene[data-theme="lava"] .heat-wave, .scene[data-theme="lava"] .volcanic-rock, .scene[data-theme="lava"] .lava-geyser { display: block; }
-        
-        /* Space Theme (Section 4) */
-        .scene[data-theme="space"] { background-color: #0c0c1c; }
-        .scene[data-theme="space"] .ground { background-color: #464646; border-top: 5px solid #333; }
-        .scene[data-theme="space"] .cloud { display: none; }
-        .scene[data-theme="space"] .star { display: block; }
-        .scene[data-theme="space"] .asteroid { display: block; }
-        .scene[data-theme="space"] .info-cloud { background-color: #e2e8f0; }
-        .scene[data-theme="space"] .shooting-star { display: block; }
-
-        /* Stage Theme (Section 5) */
-        .scene[data-theme="stage"] { background-color: #111827; }
-        .scene[data-theme="stage"] .ground { background: #6b4631; border-top: 5px solid #4a2f22; }
-        .scene[data-theme="stage"] .stage-light { display: block; }
-        
-
-        /* Game Over Theme (End) */
-        .scene[data-theme="game-over"] { background-color: #000; }
-        .scene[data-theme="game-over"] .world,
-        .scene[data-theme="game-over"] .character,
-        .scene[data-theme="game-over"] .instructions,
-        .scene[data-theme="game-over"] .header-info {
-            display: none; /* Hide everything else */
-        }
-
-
-        /* Environment Element Styles */
-        .environment-element { display: none; }
-        .cloud {
-            width: 150px; height: 50px; background: white; border-radius: 50px;
-        }
-        .cloud::before, .cloud::after {
-            content: ''; position: absolute; background: white; border-radius: 50%;
-        }
-        .cloud::before { width: 70px; height: 70px; top: -30px; left: 20px; }
-        .cloud::after { width: 90px; height: 90px; top: -40px; right: 10px; }
-        .bubble {
-            background: rgba(255, 255, 255, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.4);
-            border-radius: 50%;
-            animation: float-up 4s infinite ease-in-out;
-        }
-        @keyframes float-up {
-            0% { transform: translateY(0); opacity: 0.7; }
-            100% { transform: translateY(-120px); opacity: 0; }
-        }
-        .star {
-            background: white;
-            box-shadow: 0 0 10px white;
-            border-radius: 50%;
-        }
-        .ember {
-            background: #FFD700;
-            border-radius: 50%;
-            box-shadow: 0 0 15px #FFD700;
-            animation: float-up 3s infinite linear;
-        }
-        .asteroid {
-            background-color: #8B4513;
-            border: 2px solid #5c2d0c;
-            border-radius: 20% 50%;
-            animation: spin-and-drift 20s infinite linear;
-        }
-        @keyframes spin-and-drift {
-            0% { transform: translateX(0) rotate(0deg); }
-            100% { transform: translateX(-100px) rotate(360deg); }
-        }
-        
-        .stage-light {
-            position: absolute;
-            top: 0;
-            width: 100px;
-            height: 100%;
-            background: linear-gradient(to bottom, rgba(255, 255, 200, 0.2), transparent 60%);
-            transform-origin: top center;
-        }
-        
-        /* --- NEW ANIMATED COMPONENTS --- */
-        .bird-flock {
-            width: 50px; height: 3px; background-color: #333; top: 20%;
-            animation: fly-across 15s infinite linear;
-        }
-        .bird-flock::before, .bird-flock::after {
-            content: ''; position: absolute; width: 30px; height: 3px; background-color: #333;
-        }
-        .bird-flock::before { top: -10px; left: 20px; }
-        .bird-flock::after { top: 10px; left: 10px; }
-        @keyframes fly-across {
-            0% { transform: translateX(-100px); }
-            100% { transform: translateX(8000px); }
-        }
-
-        .fish-school {
-            width: 25px; height: 10px; background-color: #F9A602; border-radius: 50%; top: 40%;
-            animation: swim-across 10s infinite linear;
-        }
-        .fish-school::before {
-            content:''; position: absolute; right: -10px; top: 0;
-            border-top: 5px solid transparent; border-bottom: 5px solid transparent;
-            border-left: 10px solid #F9A602;
-        }
-        @keyframes swim-across {
-            0% { transform: translateX(-100px) scaleX(-1); }
-            100% { transform: translateX(8000px) scaleX(-1); }
-        }
-        
-        .seaweed {
-            bottom: 80px; width: 15px; height: 100px;
-            background: linear-gradient(to top, #006400, #2E8B57);
-            border-radius: 10px 10px 0 0;
-            transform-origin: bottom center;
-            animation: sway 5s infinite ease-in-out;
-        }
-        @keyframes sway {
-            0%, 100% { transform: rotate(0deg); }
-            50% { transform: rotate(15deg); }
-        }
-
-        .heat-wave {
-            bottom: 80px; width: 100%; height: 50px;
-            background: radial-gradient(circle, rgba(255,69,0,0.1) 0%, rgba(255,69,0,0) 70%);
-            animation: shimmer 1s infinite linear;
-        }
-        @keyframes shimmer {
-            0%, 100% { transform: scaleY(1) skewX(0deg); opacity: 0.2; }
-            50% { transform: scaleY(1.2) skewX(10deg); opacity: 0.1; }
-        }
-        
-        .volcanic-rock {
-            bottom: 80px;
-            width: 80px;
-            height: 40px;
-            background-color: #1c1c1c;
-            border: 2px solid #000;
-            border-radius: 40% 10%;
-        }
-
-        .lava-geyser {
-            bottom: 80px;
-            width: 20px;
-            height: 0px; /* Starts with no height */
-            background: linear-gradient(to top, #ff8c00, #ff4500);
-            border-radius: 10px 10px 0 0;
-            box-shadow: 0 0 15px #ff4500;
-            animation: erupt 6s infinite ease-in-out;
-        }
-
-        @keyframes erupt {
-            0%, 10%, 100% { height: 0px; opacity: 0; }
-            5% { height: 120px; opacity: 1; }
-        }
-
-        .shooting-star {
-            top: 20%; width: 100px; height: 2px;
-            background: linear-gradient(to right, white, transparent);
-            border-radius: 50%;
-            animation: streak-across 8s infinite ease-in-out;
-            transform: rotate(-20deg);
-        }
-        @keyframes streak-across {
-            0% { transform: translateX(-200px) rotate(-20deg); opacity: 0; }
-            50% { opacity: 1; }
-            100% { transform: translateX(8000px) rotate(-20deg); opacity: 0; }
-        }
-
-        .snow-particle {
-            top: -10px; width: 5px; height: 5px; background: white; border-radius: 50%;
-            animation: snowfall 10s infinite linear;
-        }
-        @keyframes snowfall {
-            0% { transform: translateY(-10px) translateX(0); }
-            100% { transform: translateY(100vh) translateX(50px); }
-        }
+        .game-over-overlay.active { opacity: 1; pointer-events: all; }
 
     </style>
 </head>
 <body>
-    <div class="scene" data-theme="sky">
-        <div class="header-info text-lg">
-            <h1 class="text-3xl">Kartik Chopra</h1>
-            <p>University of California, Irvine | STEM MBA</p>
-            <p>Irvine, CA | kartic1@uci.edu | 949-740-4465</p>
-            <a href="https://www.linkedin.com/in/kartik-chopra-uci/" target="_blank" class="text-blue-600 underline">LinkedIn Profile</a>
-        </div>
 
-        <div class="blinking-arrow" id="blinkingArrow">&#x27A4;</div>
-        
-        <div class="world">
-            <div class="cloud" style="top: 15%; left: 300px;"></div>
-            <div class="cloud" style="top: 25%; left: 900px; transform: scale(0.8);"></div>
-            <div class="cloud" style="top: 20%; left: 1800px;"></div>
-            <div class="cloud" style="top: 30%; left: 2500px; transform: scale(1.1);"></div>
+    <!-- HUD -->
+    <div class="hud" id="hud">
+        <div style="font-weight:900; font-size:1.2rem;">KC</div>
+        <a href="mailto:kartic1@uci.edu">kartic1@uci.edu</a>
+        <a href="https://linkedin.com/in/kartik-chopra-uci" target="_blank" style="color:#0077b5;">LinkedIn</a>
+    </div>
 
-            <div class="ground" style="width: 8500px;"></div>
+    <!-- START SCREEN MESSAGE -->
+    <div class="start-screen-message" id="startMsg">
+        <h1>Welcome to My Career Journey</h1>
+        <span class="blink-text">SCROLL DOWN TO START ▼</span>
+    </div>
 
-            <div class="info-sign" style="left: 300px;">
-                <h2 class="text-3xl font-bold mb-2">Welcome!</h2>
-                <p class="text-lg">Your adventure starts here. Press the right arrow key to begin the journey!</p>
-            </div>
-            
-            <div class="info-grass-patch" style="left: 850px; width: 500px;" data-trigger-x="850">
-                <h2 class="text-3xl font-bold mb-4">About Me</h2>
-                <p class="text-lg">MBA candidate and former software engineer at Oracle and Amazon, now focused on product management. I specialize in bridging the gap between complex business needs and technical solutions, guiding products from initial concept to a successful market launch. I am passionate about using user feedback and data to build intuitive, high-impact products that delight users and drive growth.</p>
-            </div>
-
-            <div class="info-water-bubble" style="left: 1850px; width: 320px; height: 320px; animation-duration: 7s;" data-trigger-x="1850">
-                <h2 class="text-3xl font-bold mb-2">My Foundation</h2>
-                <p class="text-lg mb-4 px-2">My journey began with a strong technical foundation in Computer Science, and now I'm blending that expertise with strategic leadership through my STEM MBA.</p>
-            </div>
-            <div class="info-water-bubble" style="left: 1620px; width: 260px; height: 260px; animation-duration: 8s; animation-delay: -2s; margin-top: -50px;" data-trigger-x="1850">
-                <h3 class="text-2xl font-bold">UC Irvine</h3>
-                <p class="font-bold mt-1">STEM MBA</p>
-                <p class="text-sm">The Paul Merage School of Business</p>
-                <p class="text-xs mt-1 px-2">Focusing on Product Management & Strategy to lead the next generation of tech products.</p>
-                <p class="text-xs italic mt-1">(Full-Tuition Merit Scholarship)</p>
-            </div>
-            <div class="info-water-bubble" style="left: 2120px; width: 260px; height: 260px; animation-duration: 6s; animation-delay: -1s; margin-top: 50px;" data-trigger-x="1850">
-                <h3 class="text-2xl font-bold">University of Delhi</h3>
-                <p class="font-bold mt-1">B.Eng, Computer Science</p>
-                <p class="text-sm mt-2 px-2">As VP of the dramatics club, I led a 90-member team and scaled our national festival to over 50 colleges.</p>
-            </div>
-            
-            <div class="info-lava-comet" data-trigger-x="2700" style="left: 2700px; width: 360px; height: 360px; animation-delay: -0.5s;">
-                <h2 class="text-3xl font-bold mb-2">Oracle</h2>
-                <h3 class="text-xl font-bold mb-3">Product Manager</h3>
-                <p class="text-md px-2">As a product-focused engineer, I guided roadmap priorities, defined technical specs for 10+ features, and iterated based on beta customer feedback to increase user engagement.</p>
-            </div>
-            <div class="info-lava-comet" data-trigger-x="3250" style="left: 3250px; width: 400px; height: 400px;">
-                <h2 class="text-4xl font-bold mb-2">Amazon</h2>
-                <h3 class="text-2xl font-bold mb-3">Software Development Engineer</h3>
-                <p class="text-lg px-3">Drove product growth by translating business requirements into user stories, using A/B testing for 20+ enhancements, and leveraging SQL analytics to inform the product roadmap for 1.8M users.</p>
-            </div>
-            <div class="info-lava-comet" data-trigger-x="3800" style="left: 3800px; width: 340px; height: 340px; animation-delay: -1s;">
-                <h2 class="text-3xl font-bold mb-2">Yellow.AI</h2>
-                <h3 class="text-xl font-bold mb-3">Software Development Engineer</h3>
-                <p class="text-md px-2">Defined product strategy and owned the technical discovery for a new SaaS platform, creating the engineering roadmap in JIRA that acquired 1M users in 5 months.</p>
-            </div>
-
-            <div class="constellation-container" data-trigger-x="4900" style="left: 4200px;">
-                <h2 class="constellation-title">My Skillset Constellation</h2>
-                <svg class="constellation-svg">
-                    <line x1="120" y1="210" x2="350" y2="150" /> <line x1="120" y1="210" x2="180" y2="430" /> <line x1="350" y1="150" x2="590" y2="200" /> <line x1="180" y1="430" x2="400" y2="500" /> <line x1="590" y1="200" x2="400" y2="500" /> <line x1="590" y1="200" x2="800" y2="140" /> <line x1="800" y1="140" x2="950" y2="300" /> <line x1="400" y1="500" x2="680" y2="380" /> <line x1="950" y1="300" x2="680" y2="380" /> <line x1="1100" y1="500" x2="950" y2="300" /> <line x1="1100" y1="500" x2="680" y2="380" /> </svg>
-                <div class="info-star" style="left: 60px; top: 160px; width: 120px; height: 120px;">Product Strategy</div>
-                <div class="info-star" style="left: 290px; top: 100px; width: 120px; height: 120px; animation-delay: -1s;">Roadmapping</div>
-                <div class="info-star" style="left: 120px; top: 380px; width: 120px; height: 120px; animation-delay: -2s;">User Research</div>
-                <div class="info-star" style="left: 340px; top: 450px; width: 120px; height: 120px; animation-delay: -0.5s;">Data Analysis</div>
-                <div class="info-star" style="left: 530px; top: 150px; width: 120px; height: 120px; animation-delay: -1.5s;">Go-to-Market</div>
-                <div class="info-star" style="left: 740px; top: 90px; width: 120px; height: 120px; animation-delay: -2.5s;">Agile Methodology</div>
-                <div class="info-star" style="left: 890px; top: 250px; width: 120px; height: 120px; animation-delay: -0.2s;">A/B Testing</div>
-                <div class="info-star" style="left: 620px; top: 330px; width: 120px; height: 120px; animation-delay: -1.8s;">Prioritization</div>
-                 <div class="info-star" style="left: 1040px; top: 450px; width: 120px; height: 120px; animation-delay: -1.2s;">Stakeholder Mgt.</div>
-            </div>
-            
-            <div class="info-spotlight" style="left: 6150px;" data-trigger-x="6150">
-                <h2 class="text-3xl font-bold mb-2">Certifications</h2>
-                 <ul class="list-disc pl-5 space-y-2 text-lg">
-                      <li>Certified Scrum Product Owner</li>
-                      <li>Intro to Classical Music (Yale)</li>
-                 </ul>
-            </div>
-             <div class="info-spotlight" style="left: 6850px;" data-trigger-x="6850">
-                 <h2 class="text-3xl font-bold mb-2">Personal Interests</h2>
-                 <p class="text-xl">Passionate about high-altitude trekking and theatre arts, which teach discipline, teamwork, and creative problem-solving.</p>
-            </div>
-
-
-            <div id="theme-elements">
-                <div class="environment-element bird-flock" style="left: 1000px; animation-duration: 20s;"></div>
-
-                <div class="environment-element bubble" style="left: 1450px; bottom: 100px; width: 20px; height: 20px; animation-delay: 0s;"></div>
-                <div class="environment-element bubble" style="left: 1550px; bottom: 120px; width: 30px; height: 30px; animation-delay: 1.5s;"></div>
-                <div class="environment-element bubble" style="left: 1700px; bottom: 90px; width: 15px; height: 15px; animation-delay: 2.5s;"></div>
-                <div class="environment-element fish-school" style="left: 1600px; top: 50%;"></div>
-                <div class="environment-element fish-school" style="left: 1800px; top: 60%; transform: scale(0.8); animation-delay: -2s;"></div>
-                <div class="environment-element seaweed" style="left: 2000px;"></div>
-                <div class="environment-element seaweed" style="left: 2300px; height: 80px; animation-duration: 7s;"></div>
-
-                <div class="environment-element ember" style="left: 2150px; bottom: 100px; width: 8px; height: 8px; animation-delay: 0s;"></div>
-                <div class="environment-element ember" style="left: 2250px; bottom: 120px; width: 12px; height: 12px; animation-delay: 0.5s;"></div>
-                <div class="environment-element heat-wave" style="left: 2500px;"></div>
-                <div class="environment-element heat-wave" style="left: 3000px; animation-delay: -0.5s;"></div>
-                <div class="environment-element heat-wave" style="left: 3500px;"></div>
-                <div class="environment-element volcanic-rock" style="left: 2600px;"></div>
-                <div class="environment-element volcanic-rock" style="left: 3100px; width: 120px; transform: scaleX(-1);"></div>
-                <div class="environment-element lava-geyser" style="left: 3600px; animation-delay: -3s;"></div>
-                
-                <div class="environment-element star" style="left: 4200px; top: 20%; width: 5px; height: 5px;"></div>
-                <div class="environment-element star" style="left: 4500px; top: 40%; width: 3px; height: 3px;"></div>
-                <div class="environment-element shooting-star" style="left: 4400px; animation-delay: -2s;"></div>
-                <div class="environment-element asteroid" style="left: 4600px; top: 60%; width: 50px; height: 40px;"></div>
-                <div class="environment-element asteroid" style="left: 5200px; top: 20%; width: 80px; height: 60px; animation-duration: 30s;"></div>
-
-                <div class="environment-element stage-light" style="left: 6000px; transform: rotate(20deg);"></div>
-                <div class="environment-element stage-light" style="left: 6500px; transform: rotate(-15deg) scaleY(1.2);"></div>
-                <div class="environment-element stage-light" style="left: 7000px; transform: rotate(10deg);"></div>
-
-            </div>
-        </div>
-
-        <div class="game-over-screen" data-trigger-x="7800">
-            <h2 class="text-6xl font-bold mb-4">Thanks for Playing!</h2>
-            <p class="text-3xl mb-8">I'd love to connect and discuss how I can bring my product skills to your team.</p>
-            <a href="https://www.linkedin.com/in/kartik-chopra-uci/" target="_blank" class="text-blue-400 underline text-3xl mb-8">Connect on LinkedIn</a>
-            <button onclick="resetGame()" class="text-2xl bg-white text-black px-6 py-3 rounded-lg border-4 border-black hover:bg-gray-200 transition-colors">Play Again?</button>
-        </div>
-
-        <div class="character"></div>
-
-        <div class="instructions">
-            Use Arrow Keys to Run!
+    <!-- GAME OVER SCREEN -->
+    <div class="game-over-overlay" id="gameOverScreen">
+        <h1 class="text-6xl font-black text-white mb-8">GAME OVER</h1>
+        <p class="text-gray-400 text-xl mb-8">Ready to start a new game with me?</p>
+        <div class="flex gap-4">
+            <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="bg-white text-black font-bold py-3 px-8 rounded-full hover:bg-gray-200 transition">RESTART</button>
+            <a href="https://linkedin.com/in/kartik-chopra-uci" target="_blank" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-full hover:bg-blue-700 transition">CONNECT</a>
         </div>
     </div>
 
+    <!-- MAIN VIEWPORT -->
+    <div class="viewport" id="viewport">
+        
+        <!-- LAYER 1: Background -->
+        <div class="layer layer-clouds" id="layer-bg">
+            <!-- Clouds (SVG) -->
+            <svg class="absolute top-20 left-[200px] w-32 opacity-80" viewBox="0 0 100 60"><path d="M10,40 Q20,20 40,40 Q50,10 70,40 Q90,20 90,50 L10,50 Z" fill="white"/></svg>
+            <svg class="absolute top-40 left-[800px] w-48 opacity-60" viewBox="0 0 100 60"><path d="M10,40 Q20,20 40,40 Q50,10 70,40 Q90,20 90,50 L10,50 Z" fill="white"/></svg>
+            <svg class="absolute top-10 left-[1500px] w-40 opacity-90" viewBox="0 0 100 60"><path d="M10,40 Q20,20 40,40 Q50,10 70,40 Q90,20 90,50 L10,50 Z" fill="white"/></svg>
+        </div>
+
+        <!-- LAYER 2: Midground -->
+        <div class="layer layer-mid" id="layer-mid">
+             <!-- Mountains -->
+             <svg class="absolute bottom-[120px] left-[500px] w-[600px] h-[300px]" viewBox="0 0 200 100" preserveAspectRatio="none">
+                <path d="M0,100 L50,20 L100,100 L150,40 L200,100 Z" fill="#81C784" opacity="0.8"/>
+             </svg>
+        </div>
+
+        <!-- LAYER 3: The World (Interactive Elements) -->
+        <div class="layer layer-world" id="layer-world">
+            
+            <!-- THE GROUND STRIP -->
+            <div class="ground-strip" id="ground"></div>
+
+            <!-- === ZONE 1: THE SURFACE (Intro & Education) === -->
+            
+            <!-- Intro Text -->
+            <div class="absolute bottom-[350px] left-[300px] w-[600px]">
+                <h1 class="text-7xl font-black text-gray-800 tracking-tight leading-none drop-shadow-sm">KARTIK<br>CHOPRA</h1>
+                <div class="mt-4 bg-gray-900 text-white inline-block px-4 py-2 rounded-lg font-bold shadow-lg">
+                    5-Year PM & Senior SWE
+                </div>
+            </div>
+
+            <!-- About Me Card -->
+            <div class="game-card" style="left: 1000px;">
+                <h2>About Me</h2>
+                <p class="mt-2">With a strong background as a <strong>Product Manager</strong> and <strong>Senior SWE</strong> at Oracle & Amazon, I am now pursuing my <strong>STEM MBA</strong> at UC Irvine, focusing on <strong>Product Strategy & Management</strong> to build the next generation of tech.</p>
+                <p class="mt-2 text-sm italic text-blue-700">"Passionate about using data to build intuitive, high-impact products."</p>
+            </div>
+
+            <!-- Education Group (Resized & Spaced) -->
+            <div class="absolute bottom-[120px] left-[1600px] flex items-end gap-16">
+                <!-- University of Delhi -->
+                <div class="bg-red-50 border-4 border-gray-800 p-4 w-[240px] h-[280px] flex flex-col justify-between shadow-xl relative z-10">
+                    <div class="absolute top-[-30px] left-0 w-full h-[30px] bg-red-500 border-4 border-gray-800 flex items-center justify-center">
+                        <span class="text-white font-bold text-xs">2016 - 2020</span>
+                    </div>
+                    <div>
+                        <h3 class="font-black text-lg text-gray-800 leading-tight">Univ of Delhi</h3>
+                        <p class="text-xs font-bold text-red-600">B.Eng CS</p>
+                        <p class="text-[10px] mt-2 text-gray-600 leading-snug">VP of Dramatics Club. Led 90-member team.</p>
+                    </div>
+                    <div class="grid grid-cols-3 gap-2">
+                        <div class="h-6 bg-red-200 border border-gray-400"></div>
+                        <div class="h-6 bg-red-200 border border-gray-400"></div>
+                        <div class="h-6 bg-red-200 border border-gray-400"></div>
+                    </div>
+                </div>
+
+                <!-- UC Irvine -->
+                <div class="bg-blue-50 border-4 border-gray-800 p-4 w-[260px] h-[340px] flex flex-col justify-between shadow-2xl relative z-20">
+                     <div class="absolute top-[-30px] left-0 w-full h-[30px] bg-blue-600 border-4 border-gray-800 flex items-center justify-center">
+                        <span class="text-white font-bold text-xs">2025 - 2027</span>
+                    </div>
+                    <div>
+                        <h3 class="font-black text-xl text-blue-900 leading-tight">UC Irvine</h3>
+                        <p class="text-xs font-bold text-blue-600">STEM MBA</p>
+                        <ul class="text-[10px] mt-2 font-bold text-gray-700 list-disc pl-4 space-y-1">
+                            <li>Full-Tuition Merit Scholar</li>
+                            <li>President, Merage Business & Tech Association <span class="text-blue-500">(Only 1st year elected president)</span></li>
+                        </ul>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="h-10 bg-blue-200 border-2 border-gray-300"></div>
+                        <div class="h-10 bg-blue-200 border-2 border-gray-300"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Transition Text -->
+            <div class="absolute bottom-[300px] left-[2400px] w-[400px] text-center">
+                <h2 class="text-3xl font-black text-gray-800 mb-2">Let's Deep Dive...</h2>
+                <div class="bg-blue-600 text-white px-4 py-1 rounded-full inline-block font-bold">Into My Career</div>
+                <div class="h-[100px] w-[2px] bg-gray-400 mx-auto mt-4"></div>
+            </div>
+
+            <!-- === ZONE 2: THE OCEAN (Experience) === -->
+            <!-- Transition happens around 2800px -->
+
+            <!-- Oracle -->
+            <div class="game-card" style="left: 3000px; border-color: #C62828;">
+                <span class="meta">Redwood Shores / Remote</span>
+                <h2 class="text-red-700">ORACLE</h2>
+                <h3>Product Manager</h3>
+                <ul>
+                    <li>Guided roadmap priorities & defined specs for 10+ features.</li>
+                    <li>Iterated based on beta customer feedback to increase engagement.</li>
+                    <li>Bridged engineering and business requirements effectively.</li>
+                </ul>
+            </div>
+
+            <!-- Amazon -->
+            <div class="game-card" style="left: 3500px; border-color: #FF8F00; bottom: 350px;">
+                <span class="meta">India</span>
+                <h2 class="text-orange-600">AMAZON</h2>
+                <h3>Senior Software Engineer</h3>
+                <ul>
+                    <li>Drove product growth using A/B testing for 20+ enhancements.</li>
+                    <li>Leveraged SQL analytics to inform roadmap for 1.8M users.</li>
+                    <li>Translated business reqs into user stories.</li>
+                </ul>
+            </div>
+
+            <!-- Yellow.AI -->
+            <div class="game-card" style="left: 4000px; border-color: #FBC02D;">
+                <span class="meta">Startup Environment</span>
+                <h2 class="text-yellow-600">YELLOW.AI</h2>
+                <h3>Software Dev Engineer</h3>
+                <ul>
+                    <li>Defined product strategy for new SaaS platform.</li>
+                    <li>Owned technical discovery & engineering roadmap.</li>
+                    <li>Acquired 1M users in 5 months.</li>
+                </ul>
+            </div>
+
+            <!-- Transition to Space -->
+            <div class="absolute bottom-[200px] left-[4600px] text-center">
+                <h1 class="text-5xl font-black text-white drop-shadow-lg">BLAST OFF!</h1>
+                <p class="text-white font-bold mt-2">To The Skillset Galaxy</p>
+            </div>
+
+            <!-- === ZONE 3: SPACE (Skills & Certs) === -->
+            <!-- Transition happens around 4800px -->
+
+            <!-- Skills Constellation (Compact Ursa Major) -->
+            <!-- CHANGED: Use top-[10vh] to keep heading at the top relative to viewport height -->
+            <div class="absolute top-[10vh] left-[5200px]">
+                <h2 class="text-4xl font-black text-white mb-4 border-b-4 border-white inline-block">SKILL CONSTELLATION</h2>
+                
+                <!-- Constellation Wrapper: Removed large gap, adjusted for visibility -->
+                <div class="relative mt-8">
+                    
+                    <svg width="1200" height="600" class="overflow-visible absolute top-0 left-0 -z-10">
+                        <!-- The Bowl -->
+                        <line x1="50" y1="150" x2="150" y2="150" stroke="rgba(255,255,255,0.4)" stroke-width="2" />
+                        <line x1="150" y1="150" x2="150" y2="220" stroke="rgba(255,255,255,0.4)" stroke-width="2" />
+                        <line x1="150" y1="220" x2="50" y2="200" stroke="rgba(255,255,255,0.4)" stroke-width="2" />
+                        <line x1="50" y1="200" x2="50" y2="150" stroke="rgba(255,255,255,0.4)" stroke-width="2" />
+                        
+                        <!-- The Handle -->
+                        <line x1="150" y1="150" x2="250" y2="130" stroke="rgba(255,255,255,0.4)" stroke-width="2" />
+                        <line x1="250" y1="130" x2="350" y2="145" stroke="rgba(255,255,255,0.4)" stroke-width="2" />
+                        <line x1="350" y1="145" x2="450" y2="180" stroke="rgba(255,255,255,0.4)" stroke-width="2" />
+                        
+                        <!-- Extras / New Skills -->
+                        <line x1="450" y1="180" x2="550" y2="230" stroke="rgba(255,255,255,0.2)" stroke-width="1" stroke-dasharray="4" />
+                        <line x1="50" y1="200" x2="20" y2="280" stroke="rgba(255,255,255,0.2)" stroke-width="1" stroke-dasharray="4" />
+                        
+                        <!-- Extensions for New Skills -->
+                        <line x1="150" y1="220" x2="250" y2="280" stroke="rgba(255,255,255,0.3)" stroke-width="1" /> <!-- SQL -->
+                        <line x1="350" y1="145" x2="350" y2="240" stroke="rgba(255,255,255,0.3)" stroke-width="1" /> <!-- JIRA -->
+                        <line x1="50" y1="150" x2="0" y2="80" stroke="rgba(255,255,255,0.3)" stroke-width="1" /> <!-- Market Research -->
+                        <line x1="550" y1="230" x2="650" y2="200" stroke="rgba(255,255,255,0.2)" stroke-width="1" stroke-dasharray="4" /> <!-- Leadership -->
+                        
+                        <!-- NEW CONNECTORS for requested skills -->
+                        <line x1="250" y1="280" x2="350" y2="320" stroke="rgba(255,255,255,0.2)" stroke-width="1" stroke-dasharray="4" /> <!-- Python (From SQL) -->
+                        <line x1="350" y1="320" x2="450" y2="300" stroke="rgba(255,255,255,0.2)" stroke-width="1" stroke-dasharray="4" /> <!-- APIs (From Python) -->
+                        <line x1="40" y1="150" x2="-40" y2="150" stroke="rgba(255,255,255,0.2)" stroke-width="1" stroke-dasharray="4" /> <!-- GenAI (From Strategy) -->
+                        <line x1="340" y1="240" x2="340" y2="300" stroke="rgba(255,255,255,0.2)" stroke-width="1" stroke-dasharray="4" /> <!-- Scrum (From Jira) -->
+                        <line x1="40" y1="190" x2="-20" y2="240" stroke="rgba(255,255,255,0.2)" stroke-width="1" stroke-dasharray="4" /> <!-- Figma (From Research) -->
+                        <line x1="650" y1="200" x2="750" y2="220" stroke="rgba(255,255,255,0.2)" stroke-width="1" stroke-dasharray="4" /> <!-- OKRs (From Leadership) -->
+                        <line x1="220" y1="250" x2="300" y2="220" stroke="rgba(255,255,255,0.2)" stroke-width="1" stroke-dasharray="4" /> <!-- User Stories (From Roadmap/Data) -->
+
+                    </svg>
+
+                    <!-- Stars -->
+                    
+                    <!-- 1. Top Left Bowl: Strategy -->
+                    <div class="absolute top-[140px] left-[40px] text-center w-[80px]">
+                        <div class="w-4 h-4 bg-yellow-400 rounded-full mx-auto mb-1 shadow-[0_0_15px_#FFEB3B]"></div>
+                        <span class="font-bold text-[10px] text-white">Strategy</span>
+                    </div>
+                    
+                    <!-- Market Research -->
+                     <div class="absolute top-[70px] left-[-20px] text-center w-[80px]">
+                        <div class="w-4 h-4 bg-indigo-400 rounded-full mx-auto mb-1 shadow-[0_0_15px_#5C6BC0]"></div>
+                        <span class="font-bold text-[10px] text-white">Market Res.</span>
+                    </div>
+                    
+                    <!-- NEW: GenAI -->
+                     <div class="absolute top-[140px] left-[-70px] text-center w-[80px]">
+                        <div class="w-4 h-4 bg-violet-400 rounded-full mx-auto mb-1 shadow-[0_0_15px_#AB47BC]"></div>
+                        <span class="font-bold text-[10px] text-white">GenAI / LLM</span>
+                    </div>
+
+                    <!-- 2. Top Right Bowl: Roadmap -->
+                    <div class="absolute top-[140px] left-[140px] text-center w-[80px]">
+                        <div class="w-6 h-6 bg-purple-500 rounded-full mx-auto mb-1 shadow-[0_0_20px_#9C27B0]"></div>
+                        <span class="font-bold text-[11px] text-white">Roadmap</span>
+                    </div>
+                    
+                    <!-- SQL -->
+                    <div class="absolute top-[270px] left-[240px] text-center w-[80px]">
+                        <div class="w-4 h-4 bg-cyan-500 rounded-full mx-auto mb-1 shadow-[0_0_15px_#00BCD4]"></div>
+                        <span class="font-bold text-[10px] text-white">SQL</span>
+                    </div>
+                    
+                    <!-- NEW: Python -->
+                    <div class="absolute top-[310px] left-[340px] text-center w-[80px]">
+                        <div class="w-4 h-4 bg-green-600 rounded-full mx-auto mb-1 shadow-[0_0_15px_#43A047]"></div>
+                        <span class="font-bold text-[10px] text-white">Python</span>
+                    </div>
+                    
+                    <!-- NEW: APIs -->
+                    <div class="absolute top-[290px] left-[440px] text-center w-[80px]">
+                        <div class="w-4 h-4 bg-blue-300 rounded-full mx-auto mb-1 shadow-[0_0_15px_#64B5F6]"></div>
+                        <span class="font-bold text-[10px] text-white">APIs</span>
+                    </div>
+
+                    <!-- 3. Bottom Right Bowl: Data -->
+                    <div class="absolute top-[210px] left-[140px] text-center w-[80px]">
+                        <div class="w-4 h-4 bg-green-400 rounded-full mx-auto mb-1 shadow-[0_0_15px_#4CAF50]"></div>
+                        <span class="font-bold text-[10px] text-white">Data</span>
+                    </div>
+                    
+                    <!-- 4. Bottom Left Bowl: Research -->
+                    <div class="absolute top-[190px] left-[40px] text-center w-[80px]">
+                        <div class="w-4 h-4 bg-blue-400 rounded-full mx-auto mb-1 shadow-[0_0_15px_#2196F3]"></div>
+                        <span class="font-bold text-[10px] text-white">UX Research</span>
+                    </div>
+                    
+                    <!-- NEW: Figma -->
+                     <div class="absolute top-[230px] left-[-30px] text-center w-[80px]">
+                        <div class="w-4 h-4 bg-pink-500 rounded-full mx-auto mb-1 shadow-[0_0_15px_#E91E63]"></div>
+                        <span class="font-bold text-[10px] text-white">Figma</span>
+                    </div>
+                    
+                    <!-- 5. Handle 1: GTM -->
+                    <div class="absolute top-[120px] left-[240px] text-center w-[80px]">
+                        <div class="w-4 h-4 bg-red-400 rounded-full mx-auto mb-1 shadow-[0_0_15px_#F44336]"></div>
+                        <span class="font-bold text-[10px] text-white">GTM</span>
+                    </div>
+                    
+                    <!-- 6. Handle 2: Agile -->
+                    <div class="absolute top-[135px] left-[340px] text-center w-[80px]">
+                        <div class="w-4 h-4 bg-orange-400 rounded-full mx-auto mb-1 shadow-[0_0_15px_#FF9800]"></div>
+                        <span class="font-bold text-[10px] text-white">Agile</span>
+                    </div>
+
+                    <!-- JIRA -->
+                    <div class="absolute top-[230px] left-[340px] text-center w-[80px]">
+                        <div class="w-4 h-4 bg-blue-600 rounded-full mx-auto mb-1 shadow-[0_0_15px_#1E88E5]"></div>
+                        <span class="font-bold text-[10px] text-white">JIRA</span>
+                    </div>
+                    
+                    <!-- NEW: Scrum -->
+                    <div class="absolute top-[290px] left-[340px] text-center w-[80px]">
+                        <div class="w-4 h-4 bg-orange-600 rounded-full mx-auto mb-1 shadow-[0_0_15px_#F57C00]"></div>
+                        <span class="font-bold text-[10px] text-white">Scrum</span>
+                    </div>
+                    
+                    <!-- NEW: User Stories -->
+                    <div class="absolute top-[210px] left-[260px] text-center w-[80px]">
+                        <div class="w-4 h-4 bg-gray-300 rounded-full mx-auto mb-1 shadow-[0_0_15px_#E0E0E0]"></div>
+                        <span class="font-bold text-[10px] text-white">User Stories</span>
+                    </div>
+                    
+                    <!-- 7. Handle End: A/B Testing -->
+                    <div class="absolute top-[170px] left-[440px] text-center w-[80px]">
+                        <div class="w-4 h-4 bg-teal-400 rounded-full mx-auto mb-1 shadow-[0_0_15px_#009688]"></div>
+                        <span class="font-bold text-[10px] text-white">A/B Testing</span>
+                    </div>
+                    
+                    <!-- 8. Extra Tail: Stakeholders -->
+                    <div class="absolute top-[220px] left-[540px] text-center w-[80px]">
+                        <div class="w-3 h-3 bg-pink-400 rounded-full mx-auto mb-1 shadow-[0_0_15px_#E91E63]"></div>
+                        <span class="font-bold text-[9px] text-white">Stakeholders</span>
+                    </div>
+                    
+                    <!-- Leadership -->
+                     <div class="absolute top-[190px] left-[640px] text-center w-[80px]">
+                        <div class="w-5 h-5 bg-yellow-200 rounded-full mx-auto mb-1 shadow-[0_0_15px_#FFF59D]"></div>
+                        <span class="font-bold text-[10px] text-white">Leadership</span>
+                    </div>
+                    
+                    <!-- NEW: OKRs -->
+                     <div class="absolute top-[210px] left-[740px] text-center w-[80px]">
+                        <div class="w-4 h-4 bg-lime-400 rounded-full mx-auto mb-1 shadow-[0_0_15px_#CDDC39]"></div>
+                        <span class="font-bold text-[10px] text-white">OKRs</span>
+                    </div>
+
+                     <!-- 9. Extra Bowl: Priority -->
+                     <div class="absolute top-[270px] left-[10px] text-center w-[80px]">
+                        <div class="w-3 h-3 bg-white rounded-full mx-auto mb-1 shadow-[0_0_10px_#FFF]"></div>
+                        <span class="font-bold text-[9px] text-gray-300">Priority</span>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Certifications (Satellites) -->
+            <!-- Tile 1 -->
+            <div class="absolute bottom-[500px] left-[6800px] w-[280px] bg-gray-200 rounded-lg p-4 border-4 border-gray-500 shadow-[0_0_20px_rgba(255,255,255,0.2)]">
+                <div class="absolute -top-6 -left-6 w-12 h-12 bg-blue-900 rounded-full border-4 border-gray-500 flex items-center justify-center text-white font-bold">1</div>
+                <h3 class="font-black text-gray-800 text-lg">CSPO</h3>
+                <p class="text-xs font-bold text-gray-600">Certified Scrum Product Owner</p>
+                <p class="text-xs mt-2 text-gray-700">Scrum Alliance certification demonstrating advanced knowledge in Agile product management.</p>
+                <!-- Antenna -->
+                <div class="absolute -right-4 top-1/2 w-4 h-1 bg-gray-500"></div>
+                <div class="absolute -right-8 top-1/2 w-1 h-12 bg-gray-500 -mt-6"></div>
+            </div>
+
+            <!-- Tile 2 -->
+            <div class="absolute bottom-[250px] left-[7200px] w-[280px] bg-gray-200 rounded-lg p-4 border-4 border-gray-500 shadow-[0_0_20px_rgba(255,255,255,0.2)]">
+                <div class="absolute -top-6 -left-6 w-12 h-12 bg-blue-900 rounded-full border-4 border-gray-500 flex items-center justify-center text-white font-bold">2</div>
+                <h3 class="font-black text-gray-800 text-lg">Yale University</h3>
+                <p class="text-xs font-bold text-gray-600">Intro to Classical Music</p>
+                <p class="text-xs mt-2 text-gray-700">Coursework exploring the history and theory of classical composition.</p>
+                <!-- Solar Panel Wing -->
+                <div class="absolute -bottom-8 left-1/2 -ml-10 w-20 h-6 bg-blue-800 border-2 border-gray-400"></div>
+            </div>
+
+            <!-- Interests (Space Station / Planet) -->
+            <div class="absolute bottom-[300px] left-[7800px] flex items-center gap-8">
+                <!-- The Visual -->
+                <div class="relative w-[200px] h-[200px] bg-indigo-600 rounded-full border-8 border-indigo-400 shadow-[0_0_50px_#3F51B5] overflow-hidden flex items-center justify-center">
+                    <div class="absolute w-[300px] h-[40px] bg-indigo-800 rotate-45 opacity-50"></div>
+                    <div class="text-6xl">🏔️🎭</div>
+                </div>
+                <!-- The Info -->
+                <div class="bg-white p-6 rounded-xl w-[300px] border-4 border-indigo-500">
+                    <h2 class="font-black text-2xl text-indigo-900">INTERESTS</h2>
+                    <div class="mt-4">
+                        <h3 class="font-bold text-indigo-600">High-Altitude Trekking</h3>
+                        <p class="text-xs text-gray-600">Building resilience and discipline in extreme environments.</p>
+                    </div>
+                    <div class="mt-4">
+                        <h3 class="font-bold text-indigo-600">Theatre Arts</h3>
+                        <p class="text-xs text-gray-600">Enhancing communication, teamwork, and creative expression.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FINAL: END OF LINE -->
+            <!-- Padding to allow scrolling to the very end for Game Over trigger -->
+            <div class="w-[500px]"></div>
+
+        </div> <!-- End Layer World -->
+
+        <!-- THE HERO CHARACTER (SVG) -->
+        <div class="hero" id="hero">
+            <svg viewBox="0 0 100 120">
+                <!-- Legs -->
+                <g class="legs">
+                    <rect class="leg-l" x="25" y="80" width="15" height="35" rx="5" fill="#37474F" />
+                    <rect class="leg-r" x="60" y="80" width="15" height="35" rx="5" fill="#37474F" />
+                </g>
+                <!-- Backpack -->
+                <rect x="10" y="35" width="20" height="40" rx="5" fill="#0288D1" />
+                <!-- Body -->
+                <rect class="hero-body" x="20" y="30" width="60" height="60" rx="10" fill="#FFC107" />
+                <!-- Face -->
+                <circle cx="50" cy="50" r="15" fill="#FFF" />
+                <circle cx="50" cy="50" r="5" fill="#333" />
+                <rect x="20" y="45" width="60" height="10" fill="#333" opacity="0.2" /> <!-- Goggle Strap -->
+            </svg>
+        </div>
+
+    </div>
+
     <script>
-        const character = document.querySelector('.character');
-        const world = document.querySelector('.world');
-        const scene = document.querySelector('.scene');
-        const infoElements = document.querySelectorAll('.info-cloud, .info-grass-patch, .info-water-bubble, .info-lava-comet, .constellation-container, .info-spotlight, .game-over-screen');
-        const headerInfo = document.querySelector('.header-info');
-        const blinkingArrow = document.getElementById('blinkingArrow');
-        
-        let worldX = 0;
-        let charX = 100;
-        const speed = 6; // Reduced speed for smoother feel
-        const worldWidth = 8500; // Increased world width
+        const viewport = document.getElementById('viewport');
+        const ground = document.getElementById('ground');
+        const layerBg = document.getElementById('layer-bg');
+        const layerMid = document.getElementById('layer-mid');
+        const layerWorld = document.getElementById('layer-world');
+        const hero = document.getElementById('hero');
+        const startMsg = document.getElementById('startMsg');
+        const gameOverScreen = document.getElementById('gameOverScreen');
+
+        let scrollY = 0;
+        let ticking = false;
         let isGameOver = false;
-        let firstMove = true;
 
-        const keys = {
-            ArrowRight: false,
-            ArrowLeft: false,
-        };
+        // --- SCROLL LOGIC ---
+        window.addEventListener('scroll', () => {
+            scrollY = window.scrollY;
 
-        function resetGame() {
-            worldX = 0;
-            charX = 100;
-            isGameOver = false;
-            headerInfo.classList.remove('moved');
-            firstMove = true;
-            blinkingArrow.classList.remove('fade-out');
-            // The game loop will handle hiding the game over screen and resetting the theme
-        }
-
-        document.addEventListener('keydown', (e) => {
-            if (e.key in keys) {
-                keys[e.key] = true;
-                character.classList.add('running');
-            }
-            if (e.key === 'ArrowRight' && firstMove) {
-                blinkingArrow.classList.add('fade-out');
-                firstMove = false;
-            }
-        });
-
-        document.addEventListener('keyup', (e) => {
-            if (e.key in keys) {
-                keys[e.key] = false;
-            }
-            if (!keys.ArrowLeft && !keys.ArrowRight) {
-                 character.classList.remove('running');
-            }
-        });
-        
-        function gameLoop() {
-            if (!isGameOver) {
-                if (keys.ArrowRight) {
-                    character.style.transform = 'scaleX(1)'; // Face right
-                    if (charX < scene.clientWidth * 0.6) {
-                        charX += speed;
-                    } else if (worldX < worldWidth - scene.clientWidth) {
-                        worldX += speed;
-                    } else {
-                        charX = Math.min(charX + speed, scene.clientWidth - character.clientWidth);
-                    }
-                } else if (keys.ArrowLeft) {
-                    character.style.transform = 'scaleX(-1)'; // Face left
-                    if (charX > scene.clientWidth * 0.4) {
-                        charX -= speed;
-                    } else if (worldX > 0) {
-                        worldX -= speed;
-                    } else {
-                        charX = Math.max(charX - speed, 0);
-                    }
-                }
-            }
-
-            const characterWorldX = charX + worldX;
-
-            // --- HEADER MOVE LOGIC ---
-            const headerMoveTriggerX = 1250; // A point after the "About Me" section
-            if (characterWorldX > headerMoveTriggerX) {
-                headerInfo.classList.add('moved');
+            // 1. Hide Start Message immediately
+            if(scrollY > 50) {
+                startMsg.style.opacity = 0;
             } else {
-                headerInfo.classList.remove('moved');
+                startMsg.style.opacity = 1;
             }
 
-            // --- THEME LOGIC ---
-            let currentTheme = 'sky'; // Default theme
-            
-            // Section 2: Education (Underwater)
-            if (characterWorldX >= 1550 && characterWorldX < 2500) {
-                currentTheme = 'underwater';
-            } 
-            // Section 3: Work Experience (Lava)
-            else if (characterWorldX >= 2500 && characterWorldX < 4200) { 
-                currentTheme = 'lava';
-            } 
-            // Section 4: Skills (Space)
-            else if (characterWorldX >= 4200 && characterWorldX < 5800){ 
-                currentTheme = 'space';
-            }
-            // Section 5: Certs/Interests (Stage)
-            else if (characterWorldX >= 5800 && characterWorldX < 7550) { 
-                currentTheme = 'stage';
-            }
-            // Section 6: Game Over
-            else if (characterWorldX >= 7550) { 
-                currentTheme = 'game-over';
+            // 2. Animate Hero (Run)
+            hero.classList.add('run');
+            clearTimeout(window.runTimer);
+            window.runTimer = setTimeout(() => {
+                hero.classList.remove('run');
+            }, 100);
+
+            // 3. Game Over Logic
+            if(scrollY > 8500 && !isGameOver) {
                 isGameOver = true;
+                gameOverScreen.classList.add('active');
+            } else if (scrollY < 8500 && isGameOver) {
+                isGameOver = false;
+                gameOverScreen.classList.remove('active');
             }
+
+            if (!ticking) {
+                window.requestAnimationFrame(() => {
+                    updateScene();
+                    ticking = false;
+                });
+                ticking = true;
+            }
+        });
+
+        function updateScene() {
+            // Parallax Transforms
+            // We compress the journey. 1px scroll = 1px movement.
+            layerBg.style.transform = `translate3d(-${scrollY * 0.2}px, 0, 0)`;
+            layerMid.style.transform = `translate3d(-${scrollY * 0.5}px, 0, 0)`;
+            layerWorld.style.transform = `translate3d(-${scrollY}px, 0, 0)`;
+
+            // --- THEME TRANSITIONS ---
             
-            // --- CHARACTER STYLE LOGIC ---
-            const characterThemes = ['character-sky', 'character-underwater', 'character-lava', 'character-space', 'character-stage'];
-            const newCharacterClass = `character-${currentTheme}`;
-            let needsUpdate = true;
-            for(const themeClass of characterThemes) {
-                if (character.classList.contains(themeClass) && themeClass === newCharacterClass) {
-                    needsUpdate = false;
-                    break;
-                }
+            // ZONE 2: UNDERWATER (Starts around 2800px, ends 4800px)
+            if (scrollY > 2800 && scrollY < 4800) {
+                // Change Sky to Ocean
+                viewport.style.background = 'linear-gradient(to bottom, #0288D1, #01579B)';
+                
+                // Change Ground to Ocean Floor
+                ground.style.background = '#E0C097'; 
+                ground.style.borderColor = '#BCAAA4'; 
+                
+                // Hero Swim Mode
+                hero.classList.add('swim');
+                hero.classList.remove('fly');
+                hero.style.transform = ""; // Reset inline transform to allow class to take over
+                
+            } 
+            // ZONE 3: SPACE (Starts 4800px)
+            else if (scrollY >= 4800) {
+                // Change Background to Space
+                viewport.style.background = '#0f172a';
+                
+                // Change Ground to Moon Surface
+                ground.style.background = '#475569';
+                ground.style.borderColor = '#64748b';
+                
+                // Hero Fly Mode
+                hero.classList.remove('swim');
+                hero.classList.add('fly');
+                hero.style.transform = ""; // Reset inline transform
+            } 
+            // ZONE 1: SURFACE (Reset)
+            else {
+                viewport.style.background = 'linear-gradient(to bottom, #4FC3F7, #B3E5FC)';
+                ground.style.background = '#66BB6A';
+                ground.style.borderColor = '#43A047';
+                hero.classList.remove('swim');
+                hero.classList.remove('fly');
+                hero.style.transform = 'none';
             }
-            if(needsUpdate) {
-                character.classList.remove(...characterThemes);
-                character.classList.add(newCharacterClass);
-            }
-
-
-            // Apply theme class to scene
-            if (scene.dataset.theme !== currentTheme) {
-                scene.dataset.theme = currentTheme;
-            }
-
-            infoElements.forEach(element => {
-                const triggerX = parseInt(element.dataset.triggerX);
-                const activationStartRange = 250; 
-                const activationEndRange = 600;    
-
-                const shouldBeVisible = characterWorldX > triggerX - activationStartRange && characterWorldX < triggerX + activationEndRange;
-
-                if (shouldBeVisible) {
-                    element.classList.add('visible');
-                } else {
-                    element.classList.remove('visible');
-                }
-            });
-            
-            character.style.left = charX + 'px';
-            world.style.transform = `translateX(-${worldX}px)`;
-
-            requestAnimationFrame(gameLoop);
         }
-
-        window.focus(); // Set focus to the window to enable keyboard input immediately
-        character.classList.add('character-sky'); // Set initial character
-        gameLoop();
     </script>
 </body>
 </html>
-
